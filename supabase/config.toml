@@ -1,0 +1,4 @@
+project_id = "meaapbkuwhaiwgylnpbs"
+
+[functions.speaking-score]
+verify_jwt = false
