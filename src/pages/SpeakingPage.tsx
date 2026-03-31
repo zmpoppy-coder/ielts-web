@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Mic, MicOff, Loader2, Play, RefreshCw,
-  ChevronRight, AlertCircle, BookOpen, Timer, RotateCcw, History, Upload,
-  ChevronLeft
+  ChevronRight, AlertCircle, Timer, RotateCcw,
+  ChevronLeft, Crown, ShoppingCart, LogOut, Pause
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -36,7 +36,6 @@ const MOCK_PART1: QuestionItem[] = [
   { title: "Colours", content: "Q1. What's your favourite colour?\nQ2. Do you usually wear clothes in bright colours?\nQ3. Do colours affect your mood?\nQ4. Were your colour preferences different when you were younger?", category: "Part 1" },
   { title: "Photography", content: "Q1. Do you like taking photos?\nQ2. Do you prefer taking photos with a phone or a camera?\nQ3. What do you usually take photos of?\nQ4. Do you print your photos or keep them on your phone?", category: "Part 1" },
   { title: "Noise", content: "Q1. Do you like to be in a quiet or noisy environment?\nQ2. What kinds of noise bother you the most?\nQ3. Is your neighbourhood noisy?\nQ4. Do you think noise pollution is a problem in cities?", category: "Part 1" },
-  // ── 新增 10 道 Part 1 ──
   { title: "Movies & Films", content: "Q1. Do you enjoy watching movies?\nQ2. What kind of movies do you like best?\nQ3. Do you prefer watching movies at home or in the cinema?\nQ4. Who is your favourite actor or actress?", category: "Part 1" },
   { title: "Animals & Pets", content: "Q1. Do you like animals?\nQ2. Have you ever had a pet?\nQ3. What is the most popular pet in your country?\nQ4. Do you think animals should be kept in zoos?", category: "Part 1" },
   { title: "Holidays & Vacations", content: "Q1. How do you usually spend your holidays?\nQ2. Do you prefer to travel or stay at home during holidays?\nQ3. What was the best holiday you've ever had?\nQ4. Do you think people need more holidays?", category: "Part 1" },
@@ -47,7 +46,6 @@ const MOCK_PART1: QuestionItem[] = [
   { title: "Handwriting", content: "Q1. Do you often write things by hand?\nQ2. Do you think handwriting is still important?\nQ3. Is your handwriting neat or messy?\nQ4. Do children in your country learn handwriting at school?", category: "Part 1" },
   { title: "Helping Others", content: "Q1. Do you often help others?\nQ2. How do you feel when someone helps you?\nQ3. Do you think people help each other less than before?\nQ4. What is the best way to help someone in need?", category: "Part 1" },
   { title: "Boring Things", content: "Q1. What do you do when you feel bored?\nQ2. Do you think boring activities are sometimes necessary?\nQ3. What was the most boring thing you've had to do?\nQ4. Do you get bored easily?", category: "Part 1" },
-  // ── 新增 20 道 Part 1（2025-2026 中国区） ──
   { title: "Maps & Directions", content: "Q1. Are you good at reading maps?\nQ2. Do you prefer using a paper map or a digital one?\nQ3. How often do you ask for directions?\nQ4. Have you ever got lost somewhere?", category: "Part 1" },
   { title: "Teamwork", content: "Q1. Do you prefer working alone or in a team?\nQ2. What makes a good team member?\nQ3. Have you ever had a problem working with others?\nQ4. Do you think teamwork is taught well in schools?", category: "Part 1" },
   { title: "Museums", content: "Q1. Do you like visiting museums?\nQ2. What kind of museum do you enjoy most?\nQ3. Did you go to museums when you were a child?\nQ4. Do you think museums should be free?", category: "Part 1" },
@@ -67,11 +65,10 @@ const MOCK_PART1: QuestionItem[] = [
   { title: "Picnics", content: "Q1. Do you enjoy having picnics?\nQ2. Where do people usually have picnics in your area?\nQ3. What food do you like to bring on a picnic?\nQ4. When was the last time you went on a picnic?", category: "Part 1" },
   { title: "Robots", content: "Q1. Are you interested in robots?\nQ2. Do you think robots will be common in homes in the future?\nQ3. Would you like to have a robot at home?\nQ4. Are there any jobs you think robots shouldn't do?", category: "Part 1" },
   { title: "Sunny Days", content: "Q1. Do you like sunny days?\nQ2. What do you usually do on sunny days?\nQ3. Do you prefer sunny or cloudy weather?\nQ4. Does sunshine affect your mood?", category: "Part 1" },
-  { title: "Cakes & Desserts", content: "Q1. Do you like eating cakes?\nQ2. Can you bake a cake?\nQ3. On what occasions do people eat cakes in your country?\nQ4. What is your favourite type of dessert?", category: "Part 1" },
+  { title: "Cakes & Desserts", content: "Q1. Do you like eating cakes?\nQ2. Can you bake a cake?\nQ3. On what occasions do people eat cakes in your country?\nQ4. What is your favourite type of dessert?", category: "Part 1" }
 ];
 
 const MOCK_PART2: QuestionItem[] = [
-  // ── 原有 15 道 ──
   { title: "Describe a person who has inspired you", content: "You should say:\n- who this person is\n- how you know this person\n- what they did that inspired you\nand explain why this person inspired you.", category: "Part 2" },
   { title: "Describe a place you visited that impressed you", content: "You should say:\n- where this place is\n- when you visited it\n- what you did there\nand explain why it impressed you.", category: "Part 2" },
   { title: "Describe a time when you helped someone", content: "You should say:\n- who you helped\n- how you helped them\n- why you helped them\nand explain how you felt after helping them.", category: "Part 2" },
@@ -87,7 +84,6 @@ const MOCK_PART2: QuestionItem[] = [
   { title: "Describe a person you enjoy spending time with", content: "You should say:\n- who this person is\n- how you know them\n- what you usually do together\nand explain why you enjoy spending time with them.", category: "Part 2" },
   { title: "Describe a city you would like to visit in the future", content: "You should say:\n- which city it is\n- where it is located\n- what you know about this city\nand explain why you would like to visit it.", category: "Part 2" },
   { title: "Describe an achievement you are proud of", content: "You should say:\n- what the achievement was\n- when it happened\n- how you achieved it\nand explain why you are proud of it.", category: "Part 2" },
-  // ── 新增 30 道 Part 2（与新增 Part 3 对应）──
   { title: "Describe a time you tried a new type of food", content: "You should say:\n- what the food was\n- where you tried it\n- who you were with\nand explain how you felt about it.", category: "Part 2" },
   { title: "Describe a movie that made you think", content: "You should say:\n- what the movie was\n- when you watched it\n- what it was about\nand explain why it made you think.", category: "Part 2" },
   { title: "Describe a historical building you have visited", content: "You should say:\n- where it is\n- what it looks like\n- what you learned about it\nand explain why you found it interesting.", category: "Part 2" },
@@ -118,7 +114,6 @@ const MOCK_PART2: QuestionItem[] = [
   { title: "Describe a local market you have been to", content: "You should say:\n- where the market is\n- what is sold there\n- how often you go there\nand explain what you like about it.", category: "Part 2" },
   { title: "Describe an environmental problem in your area", content: "You should say:\n- what the problem is\n- what causes it\n- how it affects people\nand explain what could be done to solve it.", category: "Part 2" },
   { title: "Describe a time you gave your opinion and people agreed", content: "You should say:\n- what the situation was\n- what your opinion was\n- who you were talking to\nand explain why people agreed with you.", category: "Part 2" },
-  // ── 新增 20 道 Part 2（2025-2026 中国区，与新 Part 3 对应）──
   { title: "Describe a time you saw an interesting animal", content: "You should say:\n- what animal it was\n- where you saw it\n- what it was doing\nand explain why you found it interesting.", category: "Part 2" },
   { title: "Describe a song that has special meaning to you", content: "You should say:\n- what the song is\n- when you first heard it\n- what the song is about\nand explain why it has special meaning to you.", category: "Part 2" },
   { title: "Describe a time you had to make a difficult choice", content: "You should say:\n- what the choice was\n- when you had to make it\n- what options you had\nand explain why it was difficult.", category: "Part 2" },
@@ -138,11 +133,10 @@ const MOCK_PART2: QuestionItem[] = [
   { title: "Describe a healthy habit you have", content: "You should say:\n- what the habit is\n- when you started doing it\n- how you maintain it\nand explain why you think it is healthy.", category: "Part 2" },
   { title: "Describe a time you attended a celebration or party", content: "You should say:\n- what the celebration was for\n- where it took place\n- who was there\nand explain what you enjoyed most about it.", category: "Part 2" },
   { title: "Describe something you would like to learn in the future", content: "You should say:\n- what it is\n- why you want to learn it\n- how you plan to learn it\nand explain how it would help you.", category: "Part 2" },
-  { title: "Describe a time you spent money on something you didn't need", content: "You should say:\n- what you bought\n- why you bought it\n- how much it cost\nand explain how you felt afterwards.", category: "Part 2" },
+  { title: "Describe a time you spent money on something you didn't need", content: "You should say:\n- what you bought\n- why you bought it\n- how much it cost\nand explain how you felt afterwards.", category: "Part 2" }
 ];
 
 const MOCK_PART3: QuestionItem[] = [
-  // ── 原有 25 道 ──
   { title: "Role Models in Society", content: "Q1. Do you think celebrities are good role models for young people?\nQ2. How has the concept of a role model changed over time?\nQ3. Should schools teach students about influential historical figures?\nQ4. Is it better to have a role model who is a family member or a public figure?", category: "Part 3" },
   { title: "Leadership and Influence", content: "Q1. What qualities make a good leader?\nQ2. Do you think leaders are born or made?\nQ3. How has leadership style changed in the modern workplace?\nQ4. Can ordinary people influence society without being leaders?", category: "Part 3" },
   { title: "Tourism and Culture", content: "Q1. How does tourism affect local cultures?\nQ2. Do you think mass tourism is damaging historical sites?\nQ3. Should governments limit the number of tourists in certain areas?\nQ4. How can tourists be more respectful of local customs?", category: "Part 3" },
@@ -168,97 +162,51 @@ const MOCK_PART3: QuestionItem[] = [
   { title: "Art and Creativity", content: "Q1. Is art important for society?\nQ2. Should governments fund the arts?\nQ3. Do you think creativity can be taught?\nQ4. How has technology changed the way people create and consume art?", category: "Part 3" },
   { title: "Competition vs Cooperation", content: "Q1. Is competition always beneficial?\nQ2. How do you think schools can encourage more cooperation among students?\nQ3. In the workplace, is competition or teamwork more important?\nQ4. Does too much competition have negative effects on people?", category: "Part 3" },
   { title: "Decision Making", content: "Q1. Do young people make decisions differently from older people?\nQ2. How does information overload affect decision-making?\nQ3. Should important decisions be made quickly or carefully?\nQ4. Do you think people regret decisions more when they are older?", category: "Part 3" },
-  // ── 新增 20 道 Part 3（与新增 Part 2 话题对应延伸）──
-  // 对应：Describe a time you tried a new type of food
   { title: "Food Culture and Globalisation", content: "Q1. Why is food culture important to a country's identity?\nQ2. Do you think globalisation has made food less authentic?\nQ3. Should schools teach children about healthy eating habits?\nQ4. How has the way people eat changed in the past 20 years?", category: "Part 3" },
-  // 对应：Describe a movie that made you think
   { title: "Films and Society", content: "Q1. Can movies change the way people think about social issues?\nQ2. Why do some people prefer foreign films over domestic ones?\nQ3. Do you think films today are too focused on entertainment rather than meaning?\nQ4. Should governments censor certain movies?", category: "Part 3" },
-  // 对应：Describe a historical building you have visited
   { title: "Preserving Historical Sites", content: "Q1. Why is it important to preserve old buildings?\nQ2. Who should pay for the maintenance of historical buildings — governments or private companies?\nQ3. Do you think modern architecture is as valuable as historical architecture?\nQ4. How can historical sites attract more visitors without being damaged?", category: "Part 3" },
-  // 对应：Describe a time you had to wait for something
   { title: "Patience in Modern Life", content: "Q1. Why are people less patient today compared to the past?\nQ2. Does instant technology make people more impatient?\nQ3. In what situations is patience most important?\nQ4. How can people learn to be more patient?", category: "Part 3" },
-  // 对应：Describe an item of clothing that is special to you
   { title: "Fashion and Identity", content: "Q1. Does what people wear reflect their personality?\nQ2. How has fashion changed in your country over the years?\nQ3. Do you think school uniforms are a good idea?\nQ4. Is the fashion industry harmful to the environment?", category: "Part 3" },
-  // 对应：Describe a subject you enjoyed studying at school
   { title: "School Subjects and Career Choices", content: "Q1. Should students be allowed to choose all their own subjects?\nQ2. Do you think some subjects are more important than others?\nQ3. How do school subjects influence career choices later in life?\nQ4. Should the school curriculum change more often to keep up with the modern world?", category: "Part 3" },
-  // 对应：Describe a piece of advice someone gave you
   { title: "Advice and Guidance", content: "Q1. Do young people today listen to advice from older generations?\nQ2. Is it better to learn from your own mistakes or take advice from others?\nQ3. Why do some people find it hard to give good advice?\nQ4. Has the internet replaced traditional sources of advice like parents and teachers?", category: "Part 3" },
-  // 对应：Describe a sport or exercise you do to stay healthy
   { title: "Exercise and Public Health", content: "Q1. Why don't some people exercise even though they know it's healthy?\nQ2. Should governments invest more in public sports facilities?\nQ3. Is competition in sport good for children's development?\nQ4. How has the fitness industry changed in recent years?", category: "Part 3" },
-  // 对应：Describe a time you forgot something important
   { title: "Memory and Modern Life", content: "Q1. Why do people forget things more easily nowadays?\nQ2. Do you think technology helps or hinders our ability to remember?\nQ3. What methods do people use to improve their memory?\nQ4. Is forgetfulness a bigger problem in older people or younger people?", category: "Part 3" },
-  // 对应：Describe a website you use often
   { title: "The Internet and Information", content: "Q1. Is all the information on the internet reliable?\nQ2. How has the internet changed the way people learn?\nQ3. Do you think too much internet use is bad for people?\nQ4. Should the internet be free for everyone?", category: "Part 3" },
-  // 对应：Describe a creative person you admire
   { title: "Creativity in the Modern World", content: "Q1. Can creativity be learned or is it something you are born with?\nQ2. Why is creativity important in the workplace?\nQ3. Do schools do enough to encourage creativity in children?\nQ4. Has technology made people more or less creative?", category: "Part 3" },
-  // 对应：Describe a law in your country that you think is good
   { title: "Laws and Society", content: "Q1. Why is it important for people to follow laws?\nQ2. Do you think laws should change as society changes?\nQ3. Are there any laws that you think are too strict or too lenient?\nQ4. How can governments make sure people understand and obey laws?", category: "Part 3" },
-  // 对应：Describe a person who is good at their job
   { title: "Professionalism and Work Ethic", content: "Q1. What makes someone truly professional at their job?\nQ2. Is passion or skill more important in being good at a job?\nQ3. How do different cultures define a good employee?\nQ4. Should companies reward employees who go above and beyond?", category: "Part 3" },
-  // 对应：Describe a tradition in your family
   { title: "Family Values and Traditions", content: "Q1. Are family traditions still important in modern society?\nQ2. How do family traditions differ between generations?\nQ3. Should parents force their children to follow family traditions?\nQ4. How can families maintain traditions when living far apart?", category: "Part 3" },
-  // 对应：Describe a time you had to learn something quickly
   { title: "Fast Learning and Adaptability", content: "Q1. Is the ability to learn quickly becoming more important today?\nQ2. Do some people learn faster than others, and if so, why?\nQ3. How can education systems help students become faster learners?\nQ4. Is there a downside to learning something too quickly?", category: "Part 3" },
-  // 对应：Describe a local market you have been to
   { title: "Local vs Global Commerce", content: "Q1. Are traditional markets still relevant in the age of online shopping?\nQ2. What are the benefits of buying from local markets?\nQ3. How has technology changed the way small businesses operate?\nQ4. Should governments do more to support local businesses?", category: "Part 3" },
-  // 对应：Describe an environmental problem in your area
   { title: "Environmental Responsibility", content: "Q1. Should individuals or governments take more responsibility for environmental issues?\nQ2. Do you think environmental education in schools is effective?\nQ3. How can technology help solve environmental problems?\nQ4. Will future generations be more environmentally conscious?", category: "Part 3" },
-  // 对应：Describe a time you gave your opinion and people agreed
   { title: "Opinions and Communication", content: "Q1. Why do some people find it difficult to express their opinions?\nQ2. Is it important to be able to persuade others?\nQ3. How has social media changed the way people share opinions?\nQ4. Do you think public speaking skills should be taught in schools?", category: "Part 3" },
-  // 对应：Describe a water sport you would like to try
   { title: "Adventure and Risk-Taking", content: "Q1. Why are adventure sports becoming more popular?\nQ2. Should there be age restrictions for extreme sports?\nQ3. Do you think risk-taking is a positive quality?\nQ4. How can people balance the desire for adventure with safety?", category: "Part 3" },
-  // 对应：Describe a change you made in your life that was positive
   { title: "Change and Self-Improvement", content: "Q1. Why do some people find it hard to make changes in their lives?\nQ2. Is it better to make big changes all at once or small changes gradually?\nQ3. How does society influence people's desire to change?\nQ4. Do you think people change more as they get older?", category: "Part 3" },
-  // 对应：Describe a toy you liked in your childhood
   { title: "Childhood and Development", content: "Q1. How have children's toys changed compared to the past?\nQ2. Do you think electronic toys are better than traditional ones?\nQ3. What role do toys play in children's development?\nQ4. Should parents limit the number of toys their children have?", category: "Part 3" },
-  // ── 新增 20 道 Part 3（与新增 Part 2 对应延伸）──
-  // 对应：Describe a time you saw an interesting animal
   { title: "Wildlife and Conservation", content: "Q1. Why is it important to protect endangered species?\nQ2. Should animals be kept in captivity for educational purposes?\nQ3. How has urbanisation affected wildlife in your country?\nQ4. Do you think wildlife documentaries raise awareness effectively?", category: "Part 3" },
-  // 对应：Describe a song that has special meaning to you
   { title: "Music and Emotions", content: "Q1. Why does music have such a strong effect on people's emotions?\nQ2. Do you think music taste reflects a person's personality?\nQ3. How has the music industry changed with streaming platforms?\nQ4. Should music education be compulsory in schools?", category: "Part 3" },
-  // 对应：Describe a time you had to make a difficult choice
   { title: "Decision-Making and Consequences", content: "Q1. Do people today have too many choices?\nQ2. How do cultural values influence the decisions people make?\nQ3. Should young people make their own important decisions or rely on parents?\nQ4. Is it better to make decisions based on logic or feelings?", category: "Part 3" },
-  // 对应：Describe a public park or garden you enjoy visiting
   { title: "Green Spaces and Urban Living", content: "Q1. Are parks and green spaces important for people living in cities?\nQ2. How do green spaces affect mental health?\nQ3. Should governments invest more in creating public parks?\nQ4. Do you think people spend enough time outdoors?", category: "Part 3" },
-  // 对应：Describe a teacher who influenced you
   { title: "Teaching and Education Quality", content: "Q1. What qualities make an excellent teacher?\nQ2. Should teachers be paid more than they currently are?\nQ3. How has the role of teachers changed with technology?\nQ4. Is the relationship between students and teachers different now compared to the past?", category: "Part 3" },
-  // 对应：Describe an interesting old person you have met
   { title: "Elderly People and Society", content: "Q1. What can young people learn from older generations?\nQ2. How should society better care for its elderly?\nQ3. Do you think elderly people are treated with enough respect today?\nQ4. How has the role of grandparents changed in modern families?", category: "Part 3" },
-  // 对应：Describe a time you visited a museum or gallery
   { title: "Museums and Cultural Preservation", content: "Q1. Should museums return historical artefacts to their countries of origin?\nQ2. How can museums attract younger visitors?\nQ3. Is it better to experience art in person or online?\nQ4. What role do museums play in preserving national identity?", category: "Part 3" },
-  // 对应：Describe a useful app on your phone
   { title: "Apps and Digital Dependency", content: "Q1. Are people becoming too dependent on mobile apps?\nQ2. How have apps changed the way people manage their daily lives?\nQ3. Should there be regulations on how apps collect personal data?\nQ4. Do you think some apps are designed to be addictive?", category: "Part 3" },
-  // 对应：Describe a time when bad weather affected your plans
   { title: "Weather and Climate Impact", content: "Q1. How does extreme weather affect people's daily lives?\nQ2. Do you think climate change is making weather patterns more unpredictable?\nQ3. Should governments do more to prepare for natural disasters?\nQ4. How has technology helped people deal with bad weather?", category: "Part 3" },
-  // 对应：Describe a piece of local news that interested you
   { title: "News and Media Literacy", content: "Q1. How do most people in your country get their news?\nQ2. Do you think local news is as important as international news?\nQ3. How can people tell if a news source is trustworthy?\nQ4. Has social media made news reporting better or worse?", category: "Part 3" },
-  // 对应：Describe a gift you made by hand for someone
   { title: "Handmade vs Mass-Produced", content: "Q1. Do you think handmade gifts are more meaningful than bought ones?\nQ2. Why is handmade craftsmanship declining in many countries?\nQ3. Should schools teach more practical crafting skills?\nQ4. Is there still a market for handmade goods in the modern world?", category: "Part 3" },
-  // 对应：Describe a time you shared something with others
   { title: "Sharing and the Sharing Economy", content: "Q1. Is sharing becoming more or less common in modern society?\nQ2. How has the sharing economy (like ride-sharing) changed people's lives?\nQ3. Do people share more when they are younger?\nQ4. What are the benefits and risks of sharing personal resources?", category: "Part 3" },
-  // 对应：Describe a quiet place you like to go to
   { title: "Silence, Solitude and Mental Health", content: "Q1. Is it hard for people to find quiet places in modern cities?\nQ2. Why do some people prefer solitude while others prefer company?\nQ3. Do you think noise pollution is a serious problem?\nQ4. How does spending time alone benefit people's mental health?", category: "Part 3" },
-  // 对应：Describe a time you used a foreign language for the first time
   { title: "Language, Culture and Identity", content: "Q1. Is learning a foreign language important for career development?\nQ2. Do you think translation technology will make language learning unnecessary?\nQ3. How does speaking another language change the way you think?\nQ4. Should countries have only one official language?", category: "Part 3" },
-  // 对应：Describe a building with an interesting design
   { title: "Architecture and Society", content: "Q1. How does architecture reflect a country's culture?\nQ2. Should cities preserve old buildings or replace them with modern ones?\nQ3. Do you think sustainable architecture is the future?\nQ4. How do building designs affect the mood of people living or working in them?", category: "Part 3" },
-  // 对应：Describe a time you were proud of a family member
   { title: "Family Pride and Values", content: "Q1. Is it important for family members to support each other's achievements?\nQ2. How do families celebrate success in your culture?\nQ3. Do you think parents put too much pressure on children to succeed?\nQ4. Has the definition of family success changed over time?", category: "Part 3" },
-  // 对应：Describe a healthy habit you have
   { title: "Health Habits and Prevention", content: "Q1. Why is it so hard for people to develop healthy habits?\nQ2. Should the government promote healthy lifestyles through campaigns?\nQ3. Do you think people are more health-conscious now than in the past?\nQ4. How can technology help people maintain healthy habits?", category: "Part 3" },
-  // 对应：Describe a time you attended a celebration or party
   { title: "Celebrations and Social Bonding", content: "Q1. Why are celebrations important in human cultures?\nQ2. How have celebrations changed compared to the past?\nQ3. Do you think people spend too much money on parties and celebrations?\nQ4. Are traditional celebrations losing their significance in modern society?", category: "Part 3" },
-  // 对应：Describe something you would like to learn in the future
   { title: "Lifelong Learning and Motivation", content: "Q1. What motivates adults to continue learning new skills?\nQ2. Do you think online courses are as effective as face-to-face learning?\nQ3. Should employers give workers time to learn new skills during work hours?\nQ4. How will the skills people need change in the next decade?", category: "Part 3" },
-  // 对应：Describe a time you spent money on something you didn't need
-  { title: "Consumer Behaviour and Impulse Buying", content: "Q1. Why do people often buy things they don't really need?\nQ2. How does advertising influence impulse buying?\nQ3. Should there be limits on how companies market products to young people?\nQ4. Do you think minimalism is a realistic lifestyle choice?", category: "Part 3" },
+  { title: "Consumer Behaviour and Impulse Buying", content: "Q1. Why do people often buy things they don't really need?\nQ2. How does advertising influence impulse buying?\nQ3. Should there be limits on how companies market products to young people?\nQ4. Do you think minimalism is a realistic lifestyle choice?", category: "Part 3" }
 ];
 
-// ── Helper: extract sub-questions from content ──
 function extractSubQuestions(content: string): string[] {
-  return content
-    .split("\n")
-    .filter(line => /^Q\d+\.\s/.test(line.trim()));
+  return content.split("\n").filter(line => /^Q\d+\.\s/.test(line.trim()));
 }
 
 interface ScoreResult {
@@ -272,15 +220,6 @@ interface ScoreResult {
   overall_feedback: string;
 }
 
-interface VocabExpansion {
-  topic_vocabulary: { word: string; meaning: string; example: string }[];
-  idiomatic_expressions: { expression: string; meaning: string; usage: string }[];
-  collocations: { collocation: string; meaning: string; example: string }[];
-  sample_ideas: string[];
-  advanced_connectors: string[];
-  answer_improvements?: { original: string; better: string; reason: string }[];
-}
-
 interface AttemptRecord {
   attempt: number;
   transcript: string;
@@ -289,53 +228,85 @@ interface AttemptRecord {
 }
 
 const SpeakingPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"part1" | "part2" | "part3" | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionItem>({ title: "", content: "", category: "" });
-  const [isRecording, setIsRecording] = useState(false);
+  
+  // 🎙️ 录音状态管理
+  const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'paused'>('idle');
+  const recordingStateRef = useRef<'idle' | 'recording' | 'paused'>('idle');
+
   const [transcript, setTranscript] = useState("");
   const [isScoring, setIsScoring] = useState(false);
+  
+  // ⏳ 动态加载状态播报器
+  const [loadingText, setLoadingText] = useState("AI 考官正在仔细聆听...");
+
   const [scoreResult, setScoreResult] = useState<ScoreResult | null>(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [vocabExpansion, setVocabExpansion] = useState<VocabExpansion | null>(null);
-  const [isLoadingVocab, setIsLoadingVocab] = useState(false);
-  const [showVocab, setShowVocab] = useState(false);
   const [attemptHistory, setAttemptHistory] = useState<AttemptRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [currentSubQ, setCurrentSubQ] = useState(0); // 0-indexed sub-question index
+  const [currentSubQ, setCurrentSubQ] = useState(0);
   const [seenPart1, setSeenPart1] = useState<Set<number>>(new Set());
   const [seenPart2, setSeenPart2] = useState<Set<number>>(new Set());
   const [seenPart3, setSeenPart3] = useState<Set<number>>(new Set());
 
-  // Mock topic pools
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [redeemCode, setRedeemCode] = useState("");
+  const [isRedeeming, setIsRedeeming] = useState(false);
+
   const [dbPart1] = useState<QuestionItem[]>(MOCK_PART1);
   const [dbPart2] = useState<QuestionItem[]>(MOCK_PART2);
   const [dbPart3] = useState<QuestionItem[]>(MOCK_PART3);
-
-  // Custom uploaded topics
   const [customPart1, setCustomPart1] = useState<QuestionItem[]>([]);
   const [customPart2, setCustomPart2] = useState<QuestionItem[]>([]);
   const [customPart3, setCustomPart3] = useState<QuestionItem[]>([]);
-  const [isExtractingPdf, setIsExtractingPdf] = useState(false);
 
-  // Part 2 countdown
   const [countdown, setCountdown] = useState<number | null>(null);
   const [countdownActive, setCountdownActive] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // 🛡️ 电焊机模式的核心：用 useRef 保存最稳固的基座文本，绝不被清空
   const recognitionRef = useRef<any>(null);
-  const fullTranscriptRef = useRef("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const baseTranscriptRef = useRef(""); 
 
-  // Merged topic pools
   const part1Topics = [...dbPart1, ...customPart1];
   const part2Topics = [...dbPart2, ...customPart2];
   const part3Topics = [...dbPart3, ...customPart3];
 
-  // Sub-questions for current question (Part 1 & Part 3 only)
   const subQuestions = useMemo(() => {
     if (activeTab === "part2") return [];
     return extractSubQuestions(currentQuestion.content);
   }, [currentQuestion, activeTab]);
+
+  useEffect(() => {
+    recordingStateRef.current = recordingState;
+  }, [recordingState]);
+
+  // 💡 动态进度播报器逻辑 (缓解 30 秒等待焦虑)
+  useEffect(() => {
+    if (!isScoring) return;
+    const messages = [
+      "正在分析发音与流利度...",
+      "正在评估词汇与语法丰富度...",
+      "正在精准捕捉语法结构错误...",
+      "正在为你生成专属高阶词汇...",
+      "正在汇总出具综合提分报告...",
+      "即将出分，请稍候..."
+    ];
+    let i = 0;
+    setLoadingText(messages[0]);
+    const timer = setInterval(() => {
+      i = (i + 1) % messages.length;
+      setLoadingText(messages[i]);
+    }, 4500); // 每 4.5 秒切换一次状态，恰好覆盖 30 秒左右
+    return () => clearInterval(timer);
+  }, [isScoring]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("已成功退出登录");
+    navigate("/auth");
+  };
 
   const playBeep = useCallback(() => {
     try {
@@ -374,6 +345,9 @@ const SpeakingPage = () => {
   useEffect(() => {
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
     };
   }, []);
 
@@ -393,11 +367,14 @@ const SpeakingPage = () => {
     const idx = unseen[Math.floor(Math.random() * unseen.length)];
     setSeen(prev => new Set(prev).add(idx));
     setCurrentQuestion(pool[idx]);
+    
+    // 切换题目时彻底清空文本和状态
     setTranscript("");
+    baseTranscriptRef.current = "";
+    setRecordingState('idle');
+    if (recognitionRef.current) recognitionRef.current.stop();
+
     setScoreResult(null);
-    setHasSubmitted(false);
-    setVocabExpansion(null);
-    setShowVocab(false);
     setAttemptHistory([]);
     setShowHistory(false);
     setCountdown(null);
@@ -410,98 +387,12 @@ const SpeakingPage = () => {
     if (activeTab && (part1Topics.length > 0 || part2Topics.length > 0 || part3Topics.length > 0)) pickRandomQuestion();
   }, [activeTab, dbPart1, dbPart2, dbPart3]);
 
-  // ── PDF Upload & Extract ──
-  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.type !== "application/pdf") {
-      toast.error("请上传 PDF 格式的文件");
-      return;
-    }
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error("文件大小不能超过 20MB");
-      return;
-    }
-
-    setIsExtractingPdf(true);
-    toast.info("正在解析 PDF 并提取题目...");
-
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let fullText = "";
-      for (let i = 1; i <= Math.min(pdf.numPages, 50); i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        const pageText = content.items.map((item: any) => item.str).join(" ");
-        fullText += pageText + "\n";
-      }
-
-      if (fullText.trim().length < 20) {
-        toast.error("PDF 内容过少，无法提取题目");
-        return;
-      }
-
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-speaking-topics`;
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ textContent: fullText.slice(0, 15000), part: activeTab }),
-      });
-
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: "提取失败" }));
-        toast.error(err.error || "提取失败");
-        return;
-      }
-
-      const result = await resp.json();
-      const questions: string[] = result.questions || [];
-
-      if (questions.length === 0) {
-        toast.warning("未能从 PDF 中提取到有效题目");
-        return;
-      }
-
-      const toObjects = (qs: string[], cat: string) => qs.map(q => ({ title: q, content: '', category: cat }));
-      if (activeTab === "part1") {
-        setCustomPart1(prev => {
-          const existingTitles = new Set([...dbPart1.map(q => q.title), ...prev.map(q => q.title)]);
-          const newOnes = questions.filter(q => !existingTitles.has(q));
-          return [...prev, ...toObjects(newOnes, 'Part 1')];
-        });
-      } else if (activeTab === "part2") {
-        setCustomPart2(prev => {
-          const existingTitles = new Set([...dbPart2.map(q => q.title), ...prev.map(q => q.title)]);
-          const newOnes = questions.filter(q => !existingTitles.has(q));
-          return [...prev, ...toObjects(newOnes, 'Part 2')];
-        });
-      } else {
-        setCustomPart3(prev => {
-          const existingTitles = new Set([...dbPart3.map(q => q.title), ...prev.map(q => q.title)]);
-          const newOnes = questions.filter(q => !existingTitles.has(q));
-          return [...prev, ...toObjects(newOnes, 'Part 3')];
-        });
-      }
-
-      toast.success(`成功提取并添加了 ${questions.length} 道题目！`);
-    } catch (err) {
-      console.error("PDF extraction error:", err);
-      toast.error("PDF 解析失败，请确保文件格式正确");
-    } finally {
-      setIsExtractingPdf(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const startRecording = () => {
+  // 🎙️ 终极引擎：电焊拼接 + 无限重连
+  const initRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast.error("您的浏览器不支持语音识别，请使用 Chrome 浏览器");
-      return;
+      return null;
     }
 
     const recognition = new SpeechRecognition();
@@ -509,61 +400,125 @@ const SpeakingPage = () => {
     recognition.continuous = true;
     recognition.interimResults = true;
 
-    fullTranscriptRef.current = "";
-
     recognition.onresult = (event: any) => {
       let interim = "";
-      let final = "";
-      for (let i = 0; i < event.results.length; i++) {
-        const t = event.results[i][0].transcript;
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
-          final += t + " ";
+          baseTranscriptRef.current += event.results[i][0].transcript + " ";
         } else {
-          interim = t;
+          interim += event.results[i][0].transcript;
         }
       }
-      fullTranscriptRef.current = final;
-      setTranscript(final + interim);
+      setTranscript(baseTranscriptRef.current + interim);
     };
 
     recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
-      if (event.error !== "no-speech") {
-        toast.error("语音识别出错: " + event.error);
-      }
+      if (event.error !== "no-speech") console.error("语音识别出错: ", event.error);
     };
 
     recognition.onend = () => {
-      if (recognitionRef.current) {
+      if (recordingStateRef.current === 'recording') {
         try { recognition.start(); } catch {}
       }
     };
 
-    recognition.start();
-    recognitionRef.current = recognition;
-    setIsRecording(true);
-    toast.info("开始录音，请用英语回答问题");
+    return recognition;
   };
 
-  const stopRecording = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.onend = null;
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
+  const handleStartRecording = () => {
+    baseTranscriptRef.current = transcript;
+    setRecordingState('recording');
+    const rec = initRecognition();
+    if (rec) {
+      rec.start();
+      recognitionRef.current = rec;
+      toast.info("开始录音，您可以随时暂停思考或修改文本");
     }
-    setIsRecording(false);
-    setTranscript(fullTranscriptRef.current.trim() || transcript);
   };
 
-  const submitForScoring = async () => {
+  const handlePauseRecording = () => {
+    setRecordingState('paused');
+    if (recognitionRef.current) {
+      recognitionRef.current.stop(); 
+    }
+  };
+
+  const handleResumeRecording = () => {
+    baseTranscriptRef.current = transcript;
+    setRecordingState('recording');
+    if (recognitionRef.current) {
+      try { recognitionRef.current.start(); } catch {}
+    } else {
+      const rec = initRecognition();
+      if (rec) {
+        rec.start();
+        recognitionRef.current = rec;
+      }
+    }
+  };
+
+  const handleStopRecording = () => {
+    setRecordingState('idle');
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+  };
+
+  const checkUsageAndSubmit = async () => {
     const text = transcript.trim();
     if (!text) {
-      toast.error("请先录音回答问题");
+      toast.error("请先录音或输入回答");
       return;
     }
-    setIsScoring(true);
-    setScoreResult(null);
 
+    setIsScoring(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) return;
+
+      const today = new Date().toISOString().split('T')[0];
+      let freeUsed = profile.free_speaking_used;
+      let paidLeft = profile.paid_speaking_left;
+      let isUnlimited = profile.is_unlimited;
+
+      if (profile.last_speaking_date !== today) {
+        freeUsed = 0;
+        await supabase
+          .from('profiles')
+          .update({ free_speaking_used: 0, last_speaking_date: today })
+          .eq('id', user.id);
+      }
+
+      if (isUnlimited) {
+        await executeScoring(text);
+      } else if (freeUsed < 1) {
+        await supabase.from('profiles').update({ free_speaking_used: freeUsed + 1 }).eq('id', user.id);
+        toast.info("已使用今日 1 次免费模考机会");
+        await executeScoring(text);
+      } else if (paidLeft > 0) {
+        await supabase.from('profiles').update({ paid_speaking_left: paidLeft - 1 }).eq('id', user.id);
+        toast.info(`使用付费包次数，剩余 ${paidLeft - 1} 次`);
+        await executeScoring(text);
+      } else {
+        setIsScoring(false);
+        setShowPaymentModal(true);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("查验身份失败，请检查网络");
+      setIsScoring(false);
+    }
+  };
+
+  const executeScoring = async (text: string) => {
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speaking-score`;
       const resp = await fetch(url, {
@@ -577,20 +532,13 @@ const SpeakingPage = () => {
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({ error: "评分失败" }));
-        toast.error(err.error || "评分失败");
-        return;
+        throw new Error(err.error || "评分失败");
       }
 
       const result = await resp.json();
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
+      if (result.error) throw new Error(result.error);
+      
       setScoreResult(result);
-      setHasSubmitted(true);
-
-      setVocabExpansion(null);
-      setShowVocab(false);
 
       const newAttempt: AttemptRecord = {
         attempt: attemptHistory.length + 1,
@@ -600,89 +548,72 @@ const SpeakingPage = () => {
       };
       setAttemptHistory(prev => [...prev, newAttempt]);
 
-      // Save speaking result to Supabase (types file may not include speaking_records yet)
-      try {
-        const { error: insertError } = await (supabase as any)
-          .from("speaking_records")
-          .insert({
-            part_type: activeTab,
-            transcript: text,
-            ai_score: result.overall_score,
-            ai_feedback: result.overall_feedback,
-          });
-        if (insertError) {
-          console.error(insertError);
-          toast.error("评分已生成，但保存到数据库失败");
-        }
-      } catch (e) {
-        console.error(e);
-        toast.error("评分已生成，但保存到数据库失败");
-      }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast.error("评分请求失败，请检查网络");
+      toast.error(e.message || "评分请求失败，请检查网络");
     } finally {
       setIsScoring(false);
     }
   };
 
+  const handleRedeem = async () => {
+    if (!redeemCode.trim()) {
+      toast.error("请输入兑换码");
+      return;
+    }
+    setIsRedeeming(true);
+    try {
+      const { data, error } = await supabase.rpc('redeem_card_code', { provided_code: redeemCode.trim() });
+      if (error) throw error;
+
+      if (data === 'success') {
+        toast.success("🎉 兑换成功！已为您解锁对应权限！", { duration: 4000 });
+        setShowPaymentModal(false);
+        setRedeemCode("");
+      } else {
+        toast.error(data || "兑换失败，请检查兑换码是否拼写正确");
+      }
+    } catch (err: any) {
+      toast.error("网络错误，请稍后重试");
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
+
+  const openPaymentWindow = (url: string) => {
+    const width = 420;
+    const height = 700;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+    window.open(
+      url, 
+      'PaymentWindow', 
+      `width=${width},height=${height},top=${top},left=${left},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+    );
+    toast.info("已在新窗口为您打开安全支付页面，获取兑换码后请在此处激活！");
+  };
+
   const retryPractice = () => {
     setTranscript("");
+    baseTranscriptRef.current = "";
     setScoreResult(null);
   };
 
-  const fetchVocabExpansion = async () => {
-    if (vocabExpansion) {
-      setShowVocab(true);
-      return;
-    }
-    setIsLoadingVocab(true);
-    try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vocab-expand`;
-      const latestAnswer = attemptHistory.length > 0
-        ? attemptHistory[attemptHistory.length - 1].transcript
-        : transcript.trim();
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-          },
-        body: JSON.stringify({
-          question: currentQuestion.title,
-          part: activeTab,
-          userAnswer: latestAnswer || undefined,
-        }),
-      });
-
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: "获取语料失败" }));
-        toast.error(err.error || "获取语料失败");
-        return;
-      }
-
-      const result = await resp.json();
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
-      setVocabExpansion(result);
-      setShowVocab(true);
-    } catch (e) {
-      console.error(e);
-      toast.error("请求失败，请检查网络");
-    } finally {
-      setIsLoadingVocab(false);
-    }
+  // 🎓 雅思官方严谨算分核心逻辑
+  const calculateIeltsScore = (fc: number, lr: number, gra: number, pr: number) => {
+    const avg = (fc + lr + gra + pr) / 4;
+    const remainder = avg % 1;
+    const base = Math.floor(avg);
+    
+    // 雅思官方四舍五入规则：逢0.25进0.5，逢0.75进1
+    if (remainder >= 0.75) return base + 1;
+    if (remainder >= 0.25) return base + 0.5;
+    return base;
   };
 
-  const adjustScore = (score: number) => Math.min(9, score + 0.5);
-
   const getScoreColor = (score: number) => {
-    const s = adjustScore(score);
-    if (s >= 7) return "text-green-600";
-    if (s >= 5) return "text-foreground";
+    if (score >= 7) return "text-green-600";
+    if (score >= 5) return "text-foreground";
     return "text-destructive";
   };
 
@@ -692,18 +623,27 @@ const SpeakingPage = () => {
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
-  // ── Menu screen ──
+  const strictOverallScore = scoreResult ? calculateIeltsScore(
+    scoreResult.fluency_coherence.score,
+    scoreResult.lexical_resource.score,
+    scoreResult.grammatical_range.score,
+    scoreResult.pronunciation.score
+  ) : 0;
+
   if (!activeTab) {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b bg-card sticky top-0 z-10">
-          <div className="container mx-auto px-6 py-4 flex items-center gap-3">
-            <Link to="/">
-              <Button variant="ghost" size="icon" className="shrink-0">
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            </Link>
-            <h1 className="text-lg font-bold text-foreground">雅思口语练习</h1>
+          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link to="/">
+                <Button variant="ghost" size="icon" className="shrink-0"><ArrowLeft className="w-4 h-4" /></Button>
+              </Link>
+              <h1 className="text-lg font-bold text-foreground">雅思口语练习</h1>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
+              <LogOut className="w-4 h-4 mr-1" /> 退出
+            </Button>
           </div>
         </header>
 
@@ -714,49 +654,20 @@ const SpeakingPage = () => {
           </div>
 
           <div className="grid sm:grid-cols-3 gap-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <button
-              onClick={() => setActiveTab("part1")}
-              className="bg-card border rounded-xl p-6 text-left hover:border-primary/40 hover:shadow-lg transition-all flex flex-col"
-            >
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Mic className="w-6 h-6 text-primary" />
-              </div>
+            <button onClick={() => setActiveTab("part1")} className="bg-card border rounded-xl p-6 text-left hover:border-primary/40 transition-all flex flex-col">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4"><Mic className="w-6 h-6 text-primary" /></div>
               <h3 className="text-lg font-bold text-foreground mb-2">Part 1</h3>
-              <p className="text-sm text-muted-foreground flex-1">考官随机提问，短问短答，练习流利度</p>
-              <p className="text-xs text-muted-foreground mt-1">共 {part1Topics.length} 道题目</p>
-              <div className="mt-4 text-sm font-semibold text-primary flex items-center gap-1">
-                开始练习 <ChevronRight className="w-4 h-4" />
-              </div>
+              <p className="text-sm text-muted-foreground flex-1">短问短答练习</p>
             </button>
-
-            <button
-              onClick={() => setActiveTab("part2")}
-              className="bg-card border rounded-xl p-6 text-left hover:border-secondary/40 hover:shadow-lg transition-all flex flex-col"
-            >
-              <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center mb-4">
-                <Mic className="w-6 h-6 text-secondary" />
-              </div>
+            <button onClick={() => setActiveTab("part2")} className="bg-card border rounded-xl p-6 text-left hover:border-secondary/40 transition-all flex flex-col">
+              <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center mb-4"><Mic className="w-6 h-6 text-secondary" /></div>
               <h3 className="text-lg font-bold text-foreground mb-2">Part 2</h3>
-              <p className="text-sm text-muted-foreground flex-1">话题卡描述，长篇独白，练习组织能力</p>
-              <p className="text-xs text-muted-foreground mt-1">共 {part2Topics.length} 道题目</p>
-              <div className="mt-4 text-sm font-semibold text-secondary flex items-center gap-1">
-                开始练习 <ChevronRight className="w-4 h-4" />
-              </div>
+              <p className="text-sm text-muted-foreground flex-1">话题卡长篇独白</p>
             </button>
-
-            <button
-              onClick={() => setActiveTab("part3")}
-              className="bg-card border rounded-xl p-6 text-left hover:border-accent-foreground/40 hover:shadow-lg transition-all flex flex-col"
-            >
-              <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center mb-4">
-                <Mic className="w-6 h-6 text-accent-foreground" />
-              </div>
+            <button onClick={() => setActiveTab("part3")} className="bg-card border rounded-xl p-6 text-left hover:border-accent-foreground/40 transition-all flex flex-col">
+              <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center mb-4"><Mic className="w-6 h-6 text-accent-foreground" /></div>
               <h3 className="text-lg font-bold text-foreground mb-2">Part 3</h3>
-              <p className="text-sm text-muted-foreground flex-1">深入讨论，抽象话题，练习批判性思维</p>
-              <p className="text-xs text-muted-foreground mt-1">共 {part3Topics.length} 道题目</p>
-              <div className="mt-4 text-sm font-semibold text-accent-foreground flex items-center gap-1">
-                开始练习 <ChevronRight className="w-4 h-4" />
-              </div>
+              <p className="text-sm text-muted-foreground flex-1">深入批判性讨论</p>
             </button>
           </div>
         </main>
@@ -764,116 +675,61 @@ const SpeakingPage = () => {
     );
   }
 
-  // ── Practice screen ──
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       <header className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => { setActiveTab(null); setScoreResult(null); setTranscript(""); setHasSubmitted(false); setVocabExpansion(null); setShowVocab(false); stopRecording(); setAttemptHistory([]); setShowHistory(false); setCurrentSubQ(0); if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; } }}>
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <h1 className="text-lg font-bold text-foreground flex-1">
-            雅思口语 {activeTab === "part1" ? "Part 1" : activeTab === "part2" ? "Part 2" : "Part 3"}
-          </h1>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            onChange={handlePdfUpload}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isExtractingPdf}
-          >
-            {isExtractingPdf ? (
-              <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> 提取中...</>
-            ) : (
-              <><Upload className="w-3.5 h-3.5 mr-1" /> 上传题库</>
-            )}
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="shrink-0" onClick={() => { setActiveTab(null); setScoreResult(null); setTranscript(""); handleStopRecording(); }}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <h1 className="text-lg font-bold text-foreground">
+              雅思口语 {activeTab === "part1" ? "Part 1" : activeTab === "part2" ? "Part 2" : "Part 3"}
+            </h1>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
+            <LogOut className="w-4 h-4 mr-1" /> 退出
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8 max-w-2xl space-y-6">
-        {/* Custom topics count */}
-        {((activeTab === "part1" && customPart1.length > 0) || (activeTab === "part2" && customPart2.length > 0) || (activeTab === "part3" && customPart3.length > 0)) && (
-          <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-2 text-xs text-primary flex items-center gap-2 animate-fade-in">
-            <Upload className="w-3.5 h-3.5" />
-            已导入 {activeTab === "part1" ? customPart1.length : activeTab === "part2" ? customPart2.length : customPart3.length} 道自定义题目，当前题库共 {activeTab === "part1" ? part1Topics.length : activeTab === "part2" ? part2Topics.length : part3Topics.length} 题
-          </div>
-        )}
-
-        {/* Question card */}
+      <main className="container mx-auto px-6 py-8 max-w-2xl space-y-6 pb-24">
         <section className="bg-card border rounded-xl p-6 space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-muted-foreground">
-              {activeTab === "part1" ? "考官提问" : activeTab === "part2" ? "话题卡" : "深入讨论"}
-            </h2>
+            <h2 className="text-sm font-semibold text-muted-foreground">当前题目</h2>
             <Button variant="ghost" size="sm" onClick={pickRandomQuestion}>
               <RefreshCw className="w-3.5 h-3.5 mr-1" /> 换一题
             </Button>
           </div>
           <h3 className="text-lg font-bold text-foreground">{currentQuestion.title}</h3>
-          {currentQuestion.content && (
-            <p className="text-foreground whitespace-pre-line">{currentQuestion.content}</p>
-          )}
+          {currentQuestion.content && <p className="text-foreground whitespace-pre-line">{currentQuestion.content}</p>}
 
-          {/* Part 2 countdown timer */}
           {activeTab === "part2" && (
             <div className="border-t pt-4 space-y-2">
               <div className="flex items-center gap-3">
-                <Button
-                  onClick={startCountdown}
-                  disabled={countdownActive}
-                  variant="outline"
-                  size="sm"
-                >
+                <Button onClick={startCountdown} disabled={countdownActive} variant="outline" size="sm">
                   <Timer className="w-3.5 h-3.5 mr-1" />
                   {countdown !== null && countdown > 0 ? formatTime(countdown) : countdown === 0 ? "时间到！" : "开始1分钟准备"}
                 </Button>
-                <span className="text-xs text-muted-foreground">
-                  📝 请在1分钟内对回答的关键词做笔记
-                </span>
               </div>
               {countdownActive && countdown !== null && (
                 <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-primary h-full transition-all duration-1000 ease-linear"
-                    style={{ width: `${(countdown / 60) * 100}%` }}
-                  />
+                  <div className="bg-primary h-full transition-all duration-1000 ease-linear" style={{ width: `${(countdown / 60) * 100}%` }} />
                 </div>
               )}
             </div>
           )}
         </section>
 
-        {/* Sub-question navigator (Part 1 & Part 3) */}
         {subQuestions.length > 0 && (
           <section className="bg-card border rounded-xl p-4 animate-fade-in">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-muted-foreground">
-                当前回答：第 {currentSubQ + 1} / {subQuestions.length} 小题
-              </span>
+              <span className="text-xs font-semibold text-muted-foreground">第 {currentSubQ + 1} / {subQuestions.length} 小题</span>
               <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  disabled={currentSubQ === 0}
-                  onClick={() => setCurrentSubQ(prev => prev - 1)}
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={currentSubQ === 0} onClick={() => setCurrentSubQ(prev => prev - 1)}>
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  disabled={currentSubQ >= subQuestions.length - 1}
-                  onClick={() => setCurrentSubQ(prev => prev + 1)}
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={currentSubQ >= subQuestions.length - 1} onClick={() => setCurrentSubQ(prev => prev + 1)}>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -881,208 +737,71 @@ const SpeakingPage = () => {
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
               <p className="text-sm font-medium text-foreground">{subQuestions[currentSubQ]}</p>
             </div>
-            <div className="flex gap-1.5 mt-3 flex-wrap">
-              {subQuestions.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentSubQ(idx)}
-                  className={`h-7 w-7 rounded-md text-xs font-bold transition-colors ${
-                    idx === currentSubQ
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {idx + 1}
-                </button>
-              ))}
-            </div>
           </section>
         )}
 
-        {/* Recording controls */}
-        <section className="bg-card border rounded-xl p-6 space-y-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        <section className="bg-card border rounded-xl p-6 space-y-4 animate-fade-in">
           <div className="flex justify-center gap-3">
-            {!isRecording ? (
-              <Button onClick={startRecording} size="lg" className="px-8">
+            {recordingState === 'idle' ? (
+              <Button onClick={handleStartRecording} size="lg" className="px-8 bg-primary hover:bg-primary/90 text-white shadow-md">
                 <Mic className="w-4 h-4 mr-2" /> 开始回答
               </Button>
             ) : (
-              <Button onClick={stopRecording} size="lg" variant="destructive" className="px-8 animate-pulse">
-                <MicOff className="w-4 h-4 mr-2" /> 结束回答
-              </Button>
+              <>
+                {recordingState === 'recording' ? (
+                  <Button onClick={handlePauseRecording} size="lg" variant="outline" className="px-6 border-orange-500 text-orange-500 hover:bg-orange-50">
+                    <Pause className="w-4 h-4 mr-2" /> 暂停 / 修改文本
+                  </Button>
+                ) : (
+                  <Button onClick={handleResumeRecording} size="lg" variant="outline" className="px-6 border-green-500 text-green-500 hover:bg-green-50">
+                    <Play className="w-4 h-4 mr-2" /> 继续录音
+                  </Button>
+                )}
+                <Button onClick={handleStopRecording} size="lg" variant="destructive" className="px-6 shadow-sm">
+                  <MicOff className="w-4 h-4 mr-2" /> 结束回答
+                </Button>
+              </>
             )}
           </div>
-          {isRecording && subQuestions.length > 0 && (
-            <p className="text-center text-xs text-primary font-medium">
-              🎙️ 正在回答 {subQuestions[currentSubQ]?.replace(/^Q\d+\.\s*/, '')}
-            </p>
-          )}
-          {isRecording && subQuestions.length === 0 && (
-            <p className="text-center text-xs text-muted-foreground">正在录音... 请用英语回答</p>
+        </section>
+
+        <section className="bg-card border rounded-xl p-6 space-y-4 animate-fade-in">
+          <div className="flex justify-between items-center">
+            <h2 className="text-sm font-semibold text-foreground">你的回答</h2>
+            {(recordingState === 'paused' || transcript) && !scoreResult && (
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">您可以直接在框内修改纠正文字</span>
+            )}
+          </div>
+          <textarea
+            value={transcript}
+            onChange={(e) => {
+              setTranscript(e.target.value);
+              baseTranscriptRef.current = e.target.value;
+            }}
+            disabled={isScoring || scoreResult !== null}
+            placeholder={recordingState === 'idle' ? "点击上方按钮开始录音，或直接在此打字输入回答..." : "正在聆听..."}
+            className={`w-full min-h-[120px] text-foreground text-sm leading-relaxed rounded-lg p-4 border outline-none resize-y transition-colors ${
+              recordingState === 'recording' ? 'bg-primary/5 border-primary/30 ring-2 ring-primary/20' : 'bg-muted/50 border-transparent focus:border-primary/50 focus:bg-background'
+            }`}
+          />
+          {!scoreResult && (transcript || recordingState !== 'idle') && (
+            <Button onClick={checkUsageAndSubmit} disabled={isScoring || recordingState === 'recording'} className="w-full shadow-sm" variant="secondary">
+              {/* 💡 替换为动态播报文本，缓解焦虑 */}
+              {isScoring ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {loadingText}</> : <><Play className="w-4 h-4 mr-2" /> 提交评分</>}
+            </Button>
           )}
         </section>
 
-        {/* Transcript */}
-        {transcript && (
-          <section className="bg-card border rounded-xl p-6 space-y-4 animate-fade-in">
-            <h2 className="text-sm font-semibold text-foreground">你的回答</h2>
-            <p className="text-foreground text-sm leading-relaxed bg-muted/50 rounded-lg p-4">
-              {transcript}
-            </p>
-            {!scoreResult && (
-              <Button
-                onClick={submitForScoring}
-                disabled={isScoring}
-                className="w-full"
-                variant="secondary"
-              >
-                {isScoring ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> AI 评分中...</>
-                ) : (
-                  <><Play className="w-4 h-4 mr-2" /> 提交评分</>
-                )}
-              </Button>
-            )}
-          </section>
-        )}
+        {false && ( <section className="hidden"></section> )}
 
-        {/* Vocab expansion button (temporarily hidden) */}
-        {false && (
-          <section className="bg-card border rounded-xl p-4 animate-fade-in">
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={fetchVocabExpansion}
-                disabled={!hasSubmitted || isLoadingVocab}
-                variant="outline"
-                className="flex-1"
-              >
-                {isLoadingVocab ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> 加载语料中...</>
-                ) : (
-                  <><BookOpen className="w-4 h-4 mr-2" /> 语料拓展</>
-                )}
-              </Button>
-              {!hasSubmitted && (
-                <span className="text-xs text-muted-foreground whitespace-nowrap">提交答案后可查看</span>
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* Vocab expansion results */}
-        {showVocab && vocabExpansion && (
-          <section className="bg-card border rounded-xl p-6 space-y-5 animate-fade-in">
-            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <BookOpen className="w-4 h-4" /> 高分语料拓展
-            </h2>
-
-            {vocabExpansion.answer_improvements && vocabExpansion.answer_improvements.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-green-600">✨ 基于你的回答的改进建议</h3>
-                <div className="grid gap-2">
-                  {vocabExpansion.answer_improvements.map((item, i) => (
-                    <div key={i} className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-sm space-y-1">
-                      <div className="flex items-start gap-2">
-                        <span className="text-muted-foreground line-through">{item.original}</span>
-                        <span className="mx-1">→</span>
-                        <span className="font-semibold text-green-600">{item.better}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{item.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {vocabExpansion.topic_vocabulary?.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-primary">📚 话题专业词汇</h3>
-                <div className="grid gap-2">
-                  {vocabExpansion.topic_vocabulary.map((v, i) => (
-                    <div key={i} className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-sm space-y-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="font-semibold text-primary">{v.word}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">{v.meaning}</span>
-                      </div>
-                      <p className="text-xs text-foreground italic">{v.example}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {vocabExpansion.idiomatic_expressions?.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-secondary">💬 地道表达</h3>
-                <div className="grid gap-2">
-                  {vocabExpansion.idiomatic_expressions.map((e, i) => (
-                    <div key={i} className="bg-secondary/5 border border-secondary/20 rounded-lg p-3 text-sm space-y-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="font-semibold text-secondary">{e.expression}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">{e.meaning}</span>
-                      </div>
-                      <p className="text-xs text-foreground">{e.usage}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {vocabExpansion.collocations?.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-accent-foreground">🔗 固定搭配</h3>
-                <div className="grid gap-2">
-                  {vocabExpansion.collocations.map((c, i) => (
-                    <div key={i} className="bg-accent/30 border border-accent rounded-lg p-3 text-sm space-y-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="font-semibold text-foreground">{c.collocation}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">{c.meaning}</span>
-                      </div>
-                      <p className="text-xs text-foreground italic">{c.example}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {vocabExpansion.sample_ideas?.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-foreground">💡 答题思路</h3>
-                <ul className="space-y-1">
-                  {vocabExpansion.sample_ideas.map((idea, i) => (
-                    <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                      <span className="text-primary font-bold">{i + 1}.</span> {idea}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {vocabExpansion.advanced_connectors?.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-foreground">🔤 高分连接词</h3>
-                <div className="flex flex-wrap gap-2">
-                  {vocabExpansion.advanced_connectors.map((c, i) => (
-                    <span key={i} className="px-3 py-1 bg-muted rounded-full text-xs font-medium text-foreground">{c}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Score results */}
         {scoreResult && (
           <section className="bg-card border rounded-xl p-6 space-y-5 animate-fade-in">
             <h2 className="text-sm font-semibold text-foreground">AI 评分结果</h2>
-
             <div className="text-center py-3">
               <span className="text-xs text-muted-foreground">总分</span>
-              <div className={`text-5xl font-extrabold ${getScoreColor(scoreResult.overall_score)}`}>
-                {adjustScore(scoreResult.overall_score)}
-              </div>
+              <div className={`text-5xl font-extrabold ${getScoreColor(strictOverallScore)}`}>{strictOverallScore.toFixed(1)}</div>
             </div>
-
+            
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "流利度与连贯性", data: scoreResult.fluency_coherence },
@@ -1093,27 +812,24 @@ const SpeakingPage = () => {
                 <div key={label} className="bg-muted/50 rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{label}</span>
-                    <span className={`text-lg font-bold ${getScoreColor(data.score)}`}>{adjustScore(data.score)}</span>
+                    <span className={`text-lg font-bold ${getScoreColor(data.score)}`}>{data.score.toFixed(1)}</span>
                   </div>
                   <p className="text-xs text-foreground">{data.feedback}</p>
-                  {data.tips && (
-                    <p className="text-xs text-primary mt-1">💡 {data.tips}</p>
-                  )}
                 </div>
               ))}
             </div>
 
             {scoreResult.grammar_errors?.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2 mt-4">
                 <h3 className="text-sm font-semibold text-destructive flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5" /> 语法错误
+                  <AlertCircle className="w-3.5 h-3.5" /> 语法纠错
                 </h3>
-                {scoreResult.grammar_errors.map((err, i) => (
+                {scoreResult.grammar_errors.slice(0, 5).map((err, i) => (
                   <div key={i} className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 text-sm space-y-1">
                     <div>
-                      <span className="line-through text-destructive">{err.original}</span>
+                      <span className="text-muted-foreground line-through decoration-destructive/50">{err.original}</span>
                       <span className="mx-2">→</span>
-                      <span className="text-green-600 font-medium">{err.correction}</span>
+                      <span className="text-destructive font-medium">{err.correction}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">{err.explanation}</p>
                   </div>
@@ -1122,7 +838,7 @@ const SpeakingPage = () => {
             )}
 
             {scoreResult.vocabulary_errors?.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2 mt-4">
                 <h3 className="text-sm font-semibold text-primary flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5" /> 用词建议
                 </h3>
@@ -1142,92 +858,102 @@ const SpeakingPage = () => {
             <div className="bg-muted/50 rounded-lg p-4">
               <p className="text-sm text-foreground">{scoreResult.overall_feedback}</p>
             </div>
-
             <div className="flex gap-3">
-              <Button onClick={retryPractice} className="flex-1" variant="secondary">
-                <RotateCcw className="w-4 h-4 mr-2" /> 再练一次
-              </Button>
-              <Button onClick={pickRandomQuestion} className="flex-1" variant="outline">
-                <RefreshCw className="w-4 h-4 mr-2" /> 下一题
-              </Button>
+              <Button onClick={retryPractice} className="flex-1" variant="secondary"><RotateCcw className="w-4 h-4 mr-2" /> 再练一次</Button>
+              <Button onClick={pickRandomQuestion} className="flex-1" variant="outline"><RefreshCw className="w-4 h-4 mr-2" /> 下一题</Button>
             </div>
           </section>
         )}
-
-        {/* Attempt history */}
-        {attemptHistory.length > 0 && (
-          <section className="bg-card border rounded-xl p-6 space-y-4 animate-fade-in">
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="flex items-center gap-2 w-full text-left"
-            >
-              <History className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold text-foreground flex-1">
-                练习记录 ({attemptHistory.length} 次)
-              </h2>
-              <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showHistory ? "rotate-90" : ""}`} />
-            </button>
-
-            {showHistory && (
-              <div className="space-y-3">
-                {attemptHistory.map((attempt) => (
-                  <div key={attempt.attempt} className="border rounded-lg p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-muted-foreground">
-                        第 {attempt.attempt} 次练习
-                      </span>
-                      <span className={`text-lg font-bold ${getScoreColor(attempt.scoreResult.overall_score)}`}>
-                        {adjustScore(attempt.scoreResult.overall_score)}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        { label: "流利", score: attempt.scoreResult.fluency_coherence.score },
-                        { label: "词汇", score: attempt.scoreResult.lexical_resource.score },
-                        { label: "语法", score: attempt.scoreResult.grammatical_range.score },
-                        { label: "发音", score: attempt.scoreResult.pronunciation.score },
-                      ].map(({ label, score }) => (
-                        <div key={label} className="text-center bg-muted/50 rounded p-1.5">
-                          <div className="text-[10px] text-muted-foreground">{label}</div>
-                          <div className={`text-sm font-bold ${getScoreColor(score)}`}>{adjustScore(score)}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{attempt.transcript}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {attempt.timestamp.toLocaleTimeString("zh-CN")}
-                    </p>
-                  </div>
-                ))}
-
-                {attemptHistory.length >= 2 && (
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-xs font-semibold text-foreground mb-1">📈 分数趋势</p>
-                    <div className="flex items-center gap-2 text-sm">
-                      {attemptHistory.map((a, i) => (
-                        <span key={i} className="flex items-center gap-1">
-                          <span className={`font-bold ${getScoreColor(a.scoreResult.overall_score)}`}>
-                            {adjustScore(a.scoreResult.overall_score)}
-                          </span>
-                          {i < attemptHistory.length - 1 && <span className="text-muted-foreground">→</span>}
-                        </span>
-                      ))}
-                    </div>
-                    {(() => {
-                      const first = attemptHistory[0].scoreResult.overall_score;
-                      const last = attemptHistory[attemptHistory.length - 1].scoreResult.overall_score;
-                      const diff = last - first;
-                      if (diff > 0) return <p className="text-xs text-green-600 mt-1">🎉 提升了 {diff} 分，继续加油！</p>;
-                      if (diff === 0) return <p className="text-xs text-muted-foreground mt-1">分数持平，尝试运用语料拓展中的表达</p>;
-                      return <p className="text-xs text-muted-foreground mt-1">别灰心，多利用语料拓展丰富你的表达</p>;
-                    })()}
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-        )}
       </main>
+
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[50] flex items-center justify-center p-4">
+          <div className="bg-card border rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 text-center space-y-2 border-b bg-muted/30 relative">
+              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Crown className="w-6 h-6 text-orange-500" />
+              </div>
+              <h2 className="text-xl font-extrabold text-foreground">今日免费次数已用完</h2>
+              <p className="text-sm text-muted-foreground">获取极速深度评分反馈，高效击破口语瓶颈</p>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div className="space-y-3">
+                <div className="border border-muted-foreground/20 rounded-xl p-4 flex justify-between items-center bg-muted/10">
+                  <div>
+                    <div className="font-bold text-foreground text-sm">尝鲜体验包 <span className="text-xs font-normal text-muted-foreground">(6次)</span></div>
+                    <div className="text-xs text-muted-foreground line-through mt-0.5">原价 ¥12.00</div>
+                    <div className="text-lg font-black text-foreground mt-1">¥4.99</div>
+                  </div>
+                  <button 
+                    onClick={() => openPaymentWindow("https://pay.ldxp.cn/item/jr2z54")}
+                    className="flex items-center gap-1 bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" /> 点击购买
+                  </button>
+                </div>
+                
+                <div className="border border-muted-foreground/20 rounded-xl p-4 flex justify-between items-center bg-muted/10">
+                  <div>
+                    <div className="font-bold text-foreground text-sm">常规进阶包 <span className="text-xs font-normal text-muted-foreground">(22次)</span></div>
+                    <div className="text-xs text-muted-foreground line-through mt-0.5">原价 ¥44.00</div>
+                    <div className="text-lg font-black text-foreground mt-1">¥16.99</div>
+                  </div>
+                  <button 
+                    onClick={() => openPaymentWindow("https://pay.ldxp.cn/item/hisp8n")}
+                    className="flex items-center gap-1 bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" /> 点击购买
+                  </button>
+                </div>
+
+                <div className="border-2 border-orange-500 rounded-xl p-4 flex justify-between items-center bg-orange-50 dark:bg-orange-900/10 relative overflow-hidden shadow-sm">
+                  <div className="absolute top-0 right-0 bg-gradient-to-r from-orange-400 to-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg flex items-center shadow-sm">
+                    🔥 提分必备
+                  </div>
+                  <div>
+                    <div className="font-extrabold text-orange-600">终身畅练 VIP <span className="text-xs font-normal opacity-80">(无限次)</span></div>
+                    <div className="text-xs text-orange-600/60 line-through mt-0.5">原价 ¥99.00</div>
+                    <div className="text-2xl font-black text-orange-600 mt-1">¥19.99</div>
+                  </div>
+                  <button 
+                    onClick={() => openPaymentWindow("https://pay.ldxp.cn/item/czdsph")}
+                    className="flex items-center gap-1 bg-orange-500 text-white text-xs font-bold px-5 py-2.5 rounded-lg hover:bg-orange-600 transition-colors shadow-md hover:shadow-lg"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" /> 点击购买
+                  </button>
+                </div>
+              </div>
+
+              <div className="h-px bg-border w-full my-4"></div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-foreground flex items-center gap-1">
+                  拿到兑换码了吗？请在下方粘贴激活：
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="例如: VIP-..."
+                    value={redeemCode}
+                    onChange={(e) => setRedeemCode(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm rounded-lg border bg-background outline-none focus:border-orange-500 transition-colors font-mono"
+                  />
+                  <Button onClick={handleRedeem} disabled={isRedeeming} className="bg-foreground text-background hover:bg-foreground/90 shrink-0">
+                    {isRedeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : "立即解锁"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 border-t bg-muted/30 text-center">
+              <button onClick={() => setShowPaymentModal(false)} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
+                稍后再说
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
