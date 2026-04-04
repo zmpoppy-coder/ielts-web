@@ -795,6 +795,12 @@ const SpeakingPage = () => {
             className={`w-full min-h-[120px] text-foreground text-sm leading-relaxed rounded-lg p-4 border outline-none resize-y transition-colors ${
               recordingState === 'recording' ? 'bg-primary/5 border-primary/30 ring-2 ring-primary/20' : 'bg-muted/50 border-transparent focus:border-primary/50 focus:bg-background'
             }`}
+            style={{
+              pointerEvents: 'auto',
+              userSelect: 'text',
+              WebkitUserSelect: 'text',
+              cursor: 'text'
+            }}
           />
           {!scoreResult && (transcript || recordingState !== 'idle') && (
             <Button onClick={checkUsageAndSubmit} disabled={isScoring || recordingState === 'recording'} className="w-full shadow-sm" variant="secondary">
