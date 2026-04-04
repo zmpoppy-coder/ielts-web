@@ -30,7 +30,7 @@ const MOCK_PART1: QuestionItem[] = [
   { title: "Friends", content: "Q1. Do you have many friends?\nQ2. How often do you meet your friends?\nQ3. Do you prefer having a few close friends or many acquaintances?\nQ4. Have you made any new friends recently?", category: "Part 1" },
   { title: "Trees & Plants", content: "Q1. Do you like plants?\nQ2. Have you ever planted a tree?\nQ3. Do you think cities need more trees?\nQ4. What's the most common tree in your area?", category: "Part 1" },
   { title: "Happiness", content: "Q1. What makes you happy?\nQ2. Do you think money can buy happiness?\nQ3. Are you happier now than you were as a child?\nQ4. What do you do when you feel unhappy?", category: "Part 1" },
-  { title: "Patience", content: "Q1. Are you a patient person?\nQ2. What things make you impatient?\nQ3. Do you think patience is important?\nQ4. Have you become more patient as you've grown older?", category: "Part 1" },
+  { title: "Patience", content: "Q1. Are you a patient person?\nQ2. What things make you subtitle?\nQ3. Do you think patience is important?\nQ4. Have you become more patient as you've grown older?", category: "Part 1" },
   { title: "Gifts", content: "Q1. Do you like giving gifts?\nQ2. What kind of gifts do you usually give?\nQ3. What was the best gift you ever received?\nQ4. Do you think expensive gifts are better?", category: "Part 1" },
   { title: "Morning Routine", content: "Q1. What do you usually do in the morning?\nQ2. Do you prefer mornings or evenings?\nQ3. Has your morning routine changed recently?\nQ4. What would be your ideal morning?", category: "Part 1" },
   { title: "Colours", content: "Q1. What's your favourite colour?\nQ2. Do you usually wear clothes in bright colours?\nQ3. Do colours affect your mood?\nQ4. Were your colour preferences different when you were younger?", category: "Part 1" },
@@ -52,7 +52,7 @@ const MOCK_PART1: QuestionItem[] = [
   { title: "Fish & Seafood", content: "Q1. Do you like eating fish?\nQ2. Have you ever been fishing?\nQ3. Is seafood popular in your area?\nQ4. Do you think eating fish is healthy?", category: "Part 1" },
   { title: "Science", content: "Q1. Were you interested in science as a child?\nQ2. What area of science interests you most?\nQ3. Do you think science is important in everyday life?\nQ4. Would you like to work in a science-related field?", category: "Part 1" },
   { title: "Chocolate", content: "Q1. Do you like chocolate?\nQ2. How often do you eat it?\nQ3. Have you ever given chocolate as a gift?\nQ4. Do you prefer dark chocolate or milk chocolate?", category: "Part 1" },
-  { title: "Wild Animals", content: "Q1. Do you like watching wildlife documentaries?\nQ2. Have you ever seen a wild animal up close?\nQ3. Are there any wild animals in your area?\nQ4. Do you think enough is done to protect wild animals?", category: "Part 1" },
+  { title: "Wild Animals", content: "Q1. Do you like watching wildlife documentaries?\nQ2. Have you ever seen a wild animal up close?\nQ3. Are there any wild animals in your area?\nQ4. Do you think enough is done to protect wild animals?", category: "Part 3" },
   { title: "Numbers & Maths", content: "Q1. Are you good with numbers?\nQ2. Do you have a lucky number?\nQ3. How do you use maths in your daily life?\nQ4. Did you enjoy maths at school?", category: "Part 1" },
   { title: "Staying Up Late", content: "Q1. Do you often stay up late?\nQ2. What do you usually do when you stay up late?\nQ3. How do you feel the next day after staying up?\nQ4. Do you think staying up late is bad for health?", category: "Part 1" },
   { title: "Collecting Things", content: "Q1. Do you collect anything?\nQ2. What did you collect when you were a child?\nQ3. Why do people like collecting things?\nQ4. Would you like to start a new collection?", category: "Part 1" },
@@ -265,7 +265,7 @@ const SpeakingPage = () => {
   const [countdownActive, setCountdownActive] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 🛡️ 电焊机模式的核心：用 useRef 保存最稳固的基座文本，绝不被清空
+  // 🛡️ 电焊机模式的核心
   const recognitionRef = useRef<any>(null);
   const baseTranscriptRef = useRef(""); 
 
@@ -282,14 +282,14 @@ const SpeakingPage = () => {
     recordingStateRef.current = recordingState;
   }, [recordingState]);
 
-  // 💡 动态进度播报器逻辑 (缓解 30 秒等待焦虑)
+  // 💡 动态进度播报逻辑
   useEffect(() => {
     if (!isScoring) return;
     const messages = [
       "正在分析发音与流利度...",
       "正在评估词汇与语法丰富度...",
       "正在精准捕捉语法结构错误...",
-      "正在为你生成专属高阶词汇...",
+      "正在为你生成专属高阶词汇建议...",
       "正在汇总出具综合提分报告...",
       "即将出分，请稍候..."
     ];
@@ -298,7 +298,7 @@ const SpeakingPage = () => {
     const timer = setInterval(() => {
       i = (i + 1) % messages.length;
       setLoadingText(messages[i]);
-    }, 4500); // 每 4.5 秒切换一次状态，恰好覆盖 30 秒左右
+    }, 4500);
     return () => clearInterval(timer);
   }, [isScoring]);
 
@@ -368,7 +368,6 @@ const SpeakingPage = () => {
     setSeen(prev => new Set(prev).add(idx));
     setCurrentQuestion(pool[idx]);
     
-    // 切换题目时彻底清空文本和状态
     setTranscript("");
     baseTranscriptRef.current = "";
     setRecordingState('idle');
@@ -387,7 +386,6 @@ const SpeakingPage = () => {
     if (activeTab && (part1Topics.length > 0 || part2Topics.length > 0 || part3Topics.length > 0)) pickRandomQuestion();
   }, [activeTab, dbPart1, dbPart2, dbPart3]);
 
-  // 🎙️ 终极引擎：电焊拼接 + 无限重连
   const initRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -581,7 +579,8 @@ const SpeakingPage = () => {
   };
 
   const openPaymentWindow = (url: string) => {
-    const width = 420;
+    // 💡 核心修复：宽度调至 900 像素，确保第三方页面排版正确，不白屏
+    const width = 900;
     const height = 700;
     const left = (window.screen.width - width) / 2;
     const top = (window.screen.height - height) / 2;
@@ -590,7 +589,7 @@ const SpeakingPage = () => {
       'PaymentWindow', 
       `width=${width},height=${height},top=${top},left=${left},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
     );
-    toast.info("已在新窗口为您打开安全支付页面，获取兑换码后请在此处激活！");
+    toast.info("已为您打开官方安全支付通道，获取兑换码后请在此处激活！");
   };
 
   const retryPractice = () => {
@@ -599,13 +598,10 @@ const SpeakingPage = () => {
     setScoreResult(null);
   };
 
-  // 🎓 雅思官方严谨算分核心逻辑
   const calculateIeltsScore = (fc: number, lr: number, gra: number, pr: number) => {
     const avg = (fc + lr + gra + pr) / 4;
     const remainder = avg % 1;
     const base = Math.floor(avg);
-    
-    // 雅思官方四舍五入规则：逢0.25进0.5，逢0.75进1
     if (remainder >= 0.75) return base + 1;
     if (remainder >= 0.25) return base + 0.5;
     return base;
@@ -786,13 +782,10 @@ const SpeakingPage = () => {
           />
           {!scoreResult && (transcript || recordingState !== 'idle') && (
             <Button onClick={checkUsageAndSubmit} disabled={isScoring || recordingState === 'recording'} className="w-full shadow-sm" variant="secondary">
-              {/* 💡 替换为动态播报文本，缓解焦虑 */}
               {isScoring ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {loadingText}</> : <><Play className="w-4 h-4 mr-2" /> 提交评分</>}
             </Button>
           )}
         </section>
-
-        {false && ( <section className="hidden"></section> )}
 
         {scoreResult && (
           <section className="bg-card border rounded-xl p-6 space-y-5 animate-fade-in">
@@ -875,6 +868,10 @@ const SpeakingPage = () => {
               </div>
               <h2 className="text-xl font-extrabold text-foreground">今日免费次数已用完</h2>
               <p className="text-sm text-muted-foreground">获取极速深度评分反馈，高效击破口语瓶颈</p>
+              {/* 🛡️ 增加背书文字，增强用户付款时的信任感 */}
+              <p className="text-[10px] text-muted-foreground/60 mt-1">
+                🛡️ 本站由官方合作平台「链动小铺」提供安全担保交易与发卡服务
+              </p>
             </div>
 
             <div className="p-6 space-y-5">
