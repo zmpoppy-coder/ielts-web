@@ -30,7 +30,7 @@ const MOCK_PART1: QuestionItem[] = [
   { title: "Friends", content: "Q1. Do you have many friends?\nQ2. How often do you meet your friends?\nQ3. Do you prefer having a few close friends or many acquaintances?\nQ4. Have you made any new friends recently?", category: "Part 1" },
   { title: "Trees & Plants", content: "Q1. Do you like plants?\nQ2. Have you ever planted a tree?\nQ3. Do you think cities need more trees?\nQ4. What's the most common tree in your area?", category: "Part 1" },
   { title: "Happiness", content: "Q1. What makes you happy?\nQ2. Do you think money can buy happiness?\nQ3. Are you happier now than you were as a child?\nQ4. What do you do when you feel unhappy?", category: "Part 1" },
-  { title: "Patience", content: "Q1. Are you a patient person?\nQ2. What things make you subtitle?\nQ3. Do you think patience is important?\nQ4. Have you become more patient as you've grown older?", category: "Part 1" },
+  { title: "Patience", content: "Q1. Are you a patient person?\nQ2. What things make you impatient?\nQ3. Do you think patience is important?\nQ4. Have you become more patient as you've grown older?", category: "Part 1" },
   { title: "Gifts", content: "Q1. Do you like giving gifts?\nQ2. What kind of gifts do you usually give?\nQ3. What was the best gift you ever received?\nQ4. Do you think expensive gifts are better?", category: "Part 1" },
   { title: "Morning Routine", content: "Q1. What do you usually do in the morning?\nQ2. Do you prefer mornings or evenings?\nQ3. Has your morning routine changed recently?\nQ4. What would be your ideal morning?", category: "Part 1" },
   { title: "Colours", content: "Q1. What's your favourite colour?\nQ2. Do you usually wear clothes in bright colours?\nQ3. Do colours affect your mood?\nQ4. Were your colour preferences different when you were younger?", category: "Part 1" },
@@ -351,6 +351,22 @@ const SpeakingPage = () => {
     };
   }, []);
 
+  // 💡 新增：专门处理小题切换的函数，确保清理上一题的答题痕迹
+  const handleSubQuestionChange = (newIndex: number) => {
+    setCurrentSubQ(newIndex);
+    // 彻底擦除输入框内容和底层记录
+    setTranscript("");
+    baseTranscriptRef.current = "";
+    // 关闭可能正在进行的录音
+    setRecordingState('idle');
+    recordingStateRef.current = 'idle'; // 同步修改避免自动重启
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    // 清除上一个问题的打分结果
+    setScoreResult(null);
+  };
+
   const pickRandomQuestion = useCallback(() => {
     const pool = activeTab === "part1" ? part1Topics : activeTab === "part2" ? part2Topics : part3Topics;
     if (pool.length === 0) return;
@@ -579,7 +595,6 @@ const SpeakingPage = () => {
   };
 
   const openPaymentWindow = (url: string) => {
-    // 💡 核心修复：宽度调至 900 像素，确保第三方页面排版正确，不白屏
     const width = 900;
     const height = 700;
     const left = (window.screen.width - width) / 2;
@@ -722,10 +737,11 @@ const SpeakingPage = () => {
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-muted-foreground">第 {currentSubQ + 1} / {subQuestions.length} 小题</span>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={currentSubQ === 0} onClick={() => setCurrentSubQ(prev => prev - 1)}>
+                {/* 💡 这里用上了我们新写的清空函数 */}
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={currentSubQ === 0} onClick={() => handleSubQuestionChange(currentSubQ - 1)}>
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={currentSubQ >= subQuestions.length - 1} onClick={() => setCurrentSubQ(prev => prev + 1)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={currentSubQ >= subQuestions.length - 1} onClick={() => handleSubQuestionChange(currentSubQ + 1)}>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -868,7 +884,6 @@ const SpeakingPage = () => {
               </div>
               <h2 className="text-xl font-extrabold text-foreground">今日免费次数已用完</h2>
               <p className="text-sm text-muted-foreground">获取极速深度评分反馈，高效击破口语瓶颈</p>
-              {/* 🛡️ 增加背书文字，增强用户付款时的信任感 */}
               <p className="text-[10px] text-muted-foreground/60 mt-1">
                 🛡️ 本站由官方合作平台「链动小铺」提供安全担保交易与发卡服务
               </p>
